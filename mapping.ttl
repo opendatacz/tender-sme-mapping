@@ -1,0 +1,214 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rr: <http://www.w3.org/ns/r2rml#>.
+@prefix exa: <http://www.trololo.com/test/ex#>.
+@prefix pc: <http://purl.org/procurement/public-contracts#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix gr: <http://purl.org/goodrelations/v1#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix br: <http://purl.org/business-register#>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix v: <http://www.w3.org/2006/vcard/ns#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<#ContactMap1>
+  a rr:TriplesMapClass; 
+  rr:tableName "zakazky" ; 
+  rr:subjectMap [
+    rr:termtype "BlankNode";
+    #rr:template "supplierContact{id}";
+    rr:template "blanksupplierContact{id}blank";
+    rr:class v:VCard;
+  ];
+
+  rr:refPredicateObjectMap [
+    rr:refPredicateMap [ rr:predicate v:adr ];
+    rr:refObjectMap [
+      rr:parentTriplesMap <#AddressMap1>;
+      rr:joinCondition "child.{id} = parent.{id}" ];
+  ].
+
+<#AddressMap1>
+  a rr:TriplesMapClass;  
+  rr:tableName "zakazky" ; 
+  rr:subjectMap [
+    rr:termtype "BlankNode";    
+    rr:template "blanksupplierAddress{id}blank";
+    rr:class v:Address;
+  ];
+
+  rr:predicateObjectMap [
+    rr:predicateMap [ rr:predicate rdfs:label ];
+    rr:objectMap [ rr:column "supplier_address"];
+  ].
+
+<#ContactMap2>
+  a rr:TriplesMapClass;  
+  rr:tableName "zakazky" ;
+
+  rr:subjectMap [
+    #rr:template "procurerContact{id}";
+    rr:template "blankprocurerContact{id}blank";
+    rr:termtype "BlankNode";
+    rr:class v:VCard;
+  ];
+
+  rr:refPredicateObjectMap [
+   rr:refPredicateMap [ rr:predicate v:adr ];
+   rr:refObjectMap [
+     rr:parentTriplesMap <#AddressMap2>;
+     rr:joinCondition "child.{id} = parent.{id}" ];
+  ].
+
+<#AddressMap2>
+  a rr:TriplesMapClass;  
+  rr:tableName "zakazky" ; 
+  rr:subjectMap [
+    rr:termtype "BlankNode";    
+    rr:template "blankprocurerAddress{id}blank";
+    rr:class v:Address;
+  ];
+
+  rr:predicateObjectMap [
+    rr:predicateMap [ rr:predicate rdfs:label ];
+    rr:objectMap [ rr:column "procurer_address"];
+  ].
+
+<#ProcurerMap>
+    a rr:TriplesMapClass;
+    rr:tableName "zakazky";
+    rr:subjectMap [ 
+        rr:template "http://ld.opendata.cz/resource/tender.sme.sk/business-entity/{procurer_ico}";
+        rr:class gr:BusinessEntity;
+    ];
+
+    rr:predicateObjectMap [
+        rr:predicateMap [ rr:predicate gr:legalName ];
+        rr:objectMap    [ rr:column "procurer_name"];
+    ];
+
+    rr:predicateObjectMap [
+        rr:predicateMap [ rr:predicate br:officialNumber ];
+        rr:objectMap [ rr:column "procurer_ico" ];
+    ];
+
+    #Procurer contact mapping
+    rr:refPredicateObjectMap [
+      rr:refPredicateMap [ rr:predicate pc:contact ];
+      rr:refObjectMap [ rr:parentTriplesMap <#ContactMap2>; rr:joinCondition "child.{id} = parent.{id}" ];
+    ].
+
+<#SupplierMap>
+    a rr:TriplesMapClass;
+        rr:tableName "zakazky" ; 
+
+    rr:subjectMap [ 
+        rr:template "http://ld.opendata.cz/resource/tender.sme.sk/business-entity/{id}";
+        rr:class gr:BusinessEntity;
+    ];
+
+    #Supplier contact mapping
+    rr:refPredicateObjectMap [
+      rr:refPredicateMap [ rr:predicate pc:contact ];
+      rr:refObjectMap [ rr:parentTriplesMap <#ContactMap1>; rr:joinCondition "child.{id} = parent.{id}" ];
+    ];
+
+    rr:predicateObjectMap [
+        rr:predicateMap [ rr:predicate gr:legalName ];
+        rr:objectMap    [ rr:column "supplier_name"];
+    ];
+
+    rr:predicateObjectMap [
+        rr:predicateMap [ rr:predicate br:officialNumber ];
+        rr:objectMap    [ rr:column "supplier_ico"];
+    ].
+
+<#ZakazkyMap>
+  a rr:TriplesMapClass ;
+    rr:tableName "zakazky" ;
+    rr:predicateObjectMap [
+      rr:predicateMap [ rr:predicate dcterms:title ];
+      rr:objectMap [ rr:column "zakazka_nazov"]; 
+    ];
+
+    rr:subjectMap [ 
+        rr:template "http://ld.opendata.cz/resource/tender.sme.sk/contract/{id}";
+        rr:class pc:Contract;
+    ];
+
+    rr:predicateObjectMap [
+      rr:predicateMap [ rr:predicate foaf:page ];
+      rr:objectMap    [
+          rr:column "source_url"
+      ];
+    ];
+
+    rr:predicateObjectMap [ 
+      rr:predicateMap [ rr:predicate dcterms:title ]; 
+      rr:objectMap [ rr:column "zakazka_nazov" ];
+    ];
+
+    #Tender mapping
+    rr:refPredicateObjectMap [
+      rr:refPredicateMap [ rr:predicate pc:tender ];
+      rr:refObjectMap    [ rr:parentTriplesMap <#TendryMap>; rr:joinCondition "child.{id} = parent.{id}" ];
+    ];
+
+    #Price mapping
+    rr:refPredicateObjectMap [
+      rr:refPredicateMap [ rr:predicate pc:agreedPrice ];
+      rr:refObjectMap    [ rr:parentTriplesMap <#PriceMap>; rr:joinCondition "child.{id} = parent.{id}"];
+    ];
+
+    rr:predicateObjectMap [ 
+      rr:predicateMap [ rr:predicate pc:referenceNumber ]; 
+      rr:objectMap    [ rr:template "{vestnik_cislo}" ];
+    ];
+
+    #Procurer mapping
+    rr:refPredicateObjectMap [
+        rr:refPredicateMap [ rr:predicate pc:contractingAuthority ];
+        rr:refObjectMap [ rr:parentTriplesMap <#ProcurerMap>; rr:joinCondition "child.{procurer_id} = parent.{procurer_id}" ];
+    ];
+
+    rr:predicateObjectMap [ 
+      rr:predicateMap [ rr:predicate pc:mainObject ]; 
+      #skos contept - prerobit objectMap
+      rr:objectMap    [ rr:template "http://purl.org/weso/pscs/cpv/2008/resource/{cpv_code}"; rr:termtype "IRI";];
+    ].
+
+<#TendryMap>
+    a rr:TriplesMapClass;
+      rr:tableName "zakazky";
+
+    rr:subjectMap [
+        rr:template "blanktender{id}blank";
+        rr:termtype "BlankNode";
+        rr:class pc:Tender;
+    ];
+    
+    rr:refPredicateObjectMap [
+      rr:refPredicateMap [ rr:predicate pc:supplier ];
+      rr:refObjectMap    [ rr:parentTriplesMap <#SupplierMap>; rr:joinCondition "child.{id} = parent.{id}"];
+    ].
+
+<#PriceMap>
+a rr:TriplesMapClass; 
+  rr:tableName "zakazky";
+    rr:subjectMap [         
+        rr:template "blankprice{id}blank";
+        rr:termtype "BlankNode";
+        rr:class gr:PriceSpecification;
+    ];
+
+    rr:predicateObjectMap [
+      rr:predicateMap [ rr:predicate gr:hasCurrency ];
+      rr:objectMap    [ rr:template "EUR"; rr:termtype "Literal" ];
+    ];
+
+    rr:predicateObjectMap [
+      rr:predicateMap [ rr:predicate gr:hasCurrencyValue ];
+      rr:objectMap    [ rr:column "zmluva_hodnota" ];
+    ].
+
